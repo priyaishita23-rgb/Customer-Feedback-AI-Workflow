@@ -1,0 +1,157 @@
+{
+  "asof": "2026-10-04",
+  "window": [
+    "2026-07-13",
+    "2026-10-04"
+  ],
+  "total_reviews": 13100,
+  "clustered_reviews": 940,
+  "avg_rating_all": 4.4,
+  "themes": [
+    {
+      "cluster": 4,
+      "label": "Support, KYC & withdrawal delays",
+      "reviews": 214,
+      "avg_rating": 1.48,
+      "negative_reviews": 195,
+      "neg_last_week": 17,
+      "neg_weekly_avg_before": 16.2
+    },
+    {
+      "cluster": 3,
+      "label": "Brokerage & hidden charges",
+      "reviews": 201,
+      "avg_rating": 2.47,
+      "negative_reviews": 138,
+      "neg_last_week": 4,
+      "neg_weekly_avg_before": 12.2
+    },
+    {
+      "cluster": 2,
+      "label": "Ease of use & overall experience",
+      "reviews": 235,
+      "avg_rating": 3.27,
+      "negative_reviews": 110,
+      "neg_last_week": 9,
+      "neg_weekly_avg_before": 9.2
+    },
+    {
+      "cluster": 1,
+      "label": "General feedback (groww app, experience, user)",
+      "reviews": 179,
+      "avg_rating": 2.98,
+      "negative_reviews": 96,
+      "neg_last_week": 3,
+      "neg_weekly_avg_before": 8.5
+    },
+    {
+      "cluster": 0,
+      "label": "Charts, orders & update bugs",
+      "reviews": 111,
+      "avg_rating": 2.31,
+      "negative_reviews": 85,
+      "neg_last_week": 2,
+      "neg_weekly_avg_before": 7.5
+    }
+  ],
+  "top_themes": [
+    "Support, KYC & withdrawal delays",
+    "Brokerage & hidden charges",
+    "Ease of use & overall experience"
+  ],
+  "quotes": [
+    {
+      "theme": "Support, KYC & withdrawal delays",
+      "text": "Customer service is very poor they don't pick up the phone or cancel the sip has also taken penalty or you should extend the app time is also not getting updated",
+      "rating": 1,
+      "date": "2026-08-03",
+      "review_id": "5df4aa8dc7"
+    },
+    {
+      "theme": "Brokerage & hidden charges",
+      "text": "Very bad experience. Too many hidden charges.... interphase is Good. But Not for intraday or small investors. Stop loss , Target price won't work when you need it. It stops working or won't be executed if the user volume is too high",
+      "date": "2026-08-19",
+      "rating": 1,
+      "review_id": "fee-evidence"
+    },
+    {
+      "theme": "Ease of use & overall experience",
+      "text": "The UI is user friendly but the functioning of the app is very poor it gets lagged when important trades are taken..........worst app to trade in or invest in.",
+      "rating": 1,
+      "date": "2026-09-09",
+      "review_id": "6d3c7c8d5b"
+    }
+  ],
+  "fee_issue": {
+    "fee": "Hidden / unexplained charges on sell orders",
+    "mentions": 41,
+    "confusion_mentions": 28,
+    "query": "DP charge on selling shares per sell transaction, sell value under Rs 100, GST and statutory charges deducted",
+    "evidence": [
+      {
+        "text": "Very bad experience. Too many hidden charges.... interphase is Good. But Not for intraday or small investors. Stop loss , Target price won't work when you need it. It stops working or won't be executed if the user volume is too high",
+        "date": "2026-08-19",
+        "rating": 1
+      },
+      {
+        "text": "If you're an F&O trader, stay away from this app. Tracking errors cause real financial losses, and they hit you with hidden charges that increase without notice. Stick to a more reliable broker.",
+        "date": "2026-07-27",
+        "rating": 1
+      },
+      {
+        "text": "There are many hidden charges involved in this, and its terms and conditions are such that this app is just a money swindle.",
+        "date": "2026-07-16",
+        "rating": 1
+      }
+    ],
+    "all_buckets": [
+      {
+        "fee": "Hidden / unexplained charges on sell orders",
+        "mentions": 41,
+        "confusion_mentions": 28,
+        "evidence": [
+          {
+            "text": "Very bad experience. Too many hidden charges.... interphase is Good. But Not for intraday or small investors. Stop loss , Target price won't work when you need it. It stops working or won't be executed if the user volume is too high",
+            "date": "2026-08-19",
+            "rating": 1
+          },
+          {
+            "text": "If you're an F&O trader, stay away from this app. Tracking errors cause real financial losses, and they hit you with hidden charges that increase without notice. Stick to a more reliable broker.",
+            "date": "2026-07-27",
+            "rating": 1
+          },
+          {
+            "text": "There are many hidden charges involved in this, and its terms and conditions are such that this app is just a money swindle.",
+            "date": "2026-07-16",
+            "rating": 1
+          }
+        ]
+      },
+      {
+        "fee": "Brokerage level",
+        "mentions": 153,
+        "confusion_mentions": 17
+      },
+      {
+        "fee": "Statutory taxes (STT / GST / stamp duty)",
+        "mentions": 32,
+        "confusion_mentions": 7
+      },
+      {
+        "fee": "Auto square-off fee",
+        "mentions": 6,
+        "confusion_mentions": 3
+      },
+      {
+        "fee": "Account maintenance (AMC)",
+        "mentions": 15,
+        "confusion_mentions": 2
+      },
+      {
+        "fee": "DDPI / POA fee",
+        "mentions": 7,
+        "confusion_mentions": 2
+      }
+    ]
+  }
+}
