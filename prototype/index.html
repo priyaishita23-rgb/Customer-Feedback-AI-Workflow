@@ -4,19 +4,21 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <style>
 /* Layout: one working column (max 1120px) under a header; a four-step stepper switches panels — the steps are the pipeline's real order. */
+/* Single light look by request: white ground, sage-green accents. */
 :root {
-  --paper: #F4F5F2;
+  color-scheme: light;
+  --paper: #FFFFFF;
   --surface: #FFFFFF;
-  --sunk: #ECEEEA;
-  --ink: #18211E;
-  --muted: #5B6863;
-  --line: #D9DED9;
-  --accent: #2C47AE;
+  --sunk: #F3F6F1;
+  --ink: #1E2A21;
+  --muted: #5D6C60;
+  --line: #DAE3D5;
+  --accent: #4E6E50;
   --accent-ink: #FFFFFF;
-  --accent-soft: #E6EAF8;
-  --mark: #3D5BC9;
-  --ok: #2B7A4B;
-  --ok-soft: #E3F1E8;
+  --accent-soft: #E7EFE3;
+  --mark: #8DA889;
+  --ok: #2E6B3F;
+  --ok-soft: #E2EFDF;
   --warn: #9A6412;
   --warn-soft: #FBF0DC;
   --bad: #A83C2B;
@@ -25,20 +27,6 @@
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --r: 10px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #111614; --surface: #19201D; --sunk: #141A18; --ink: #E6EBE8; --muted: #95A39D; --line: #2B3632;
-    --accent: #93A9FF; --accent-ink: #0F1630; --accent-soft: #222B4A; --mark: #8EA4FA;
-    --ok: #74C495; --ok-soft: #1B2E23; --warn: #E3AE55; --warn-soft: #33281A; --bad: #EE8C7A; --bad-soft: #3A221E;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #111614; --surface: #19201D; --sunk: #141A18; --ink: #E6EBE8; --muted: #95A39D; --line: #2B3632;
-  --accent: #93A9FF; --accent-ink: #0F1630; --accent-soft: #222B4A; --mark: #8EA4FA;
-  --ok: #74C495; --ok-soft: #1B2E23; --warn: #E3AE55; --warn-soft: #33281A; --bad: #EE8C7A; --bad-soft: #3A221E;
-  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--paper); color: var(--ink); font: 15px/1.55 var(--body); }
@@ -64,7 +52,7 @@ nav.steps button {
   border: 1px solid var(--line); background: var(--surface); min-width: 0;
 }
 nav.steps button:hover { border-color: var(--muted); }
-nav.steps button[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+nav.steps button[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
 nav.steps .n { font: 500 12px var(--mono); color: var(--muted); }
 nav.steps .t { font: 600 15px/1.25 var(--body); }
 @media (max-width: 760px) { nav.steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -118,7 +106,7 @@ blockquote footer { display: flex; flex-wrap: wrap; gap: 6px 10px; font: 12px va
 .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .filters input[type=search] { flex: 1 1 220px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; }
 .pill { all: unset; cursor: pointer; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; background: var(--surface); }
-.pill[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.pill[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .reviews { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .reviews article { background: var(--surface); padding: 12px 14px; display: grid; gap: 6px; }
 .reviews .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 12px var(--mono); color: var(--muted); }
