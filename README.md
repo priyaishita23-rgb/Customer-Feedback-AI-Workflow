@@ -6,6 +6,13 @@ Building an AI workflow for the Groww RAG ChatBot that was made in the previous 
 Product from Milestone 1: **Groww** (stocks / mutual funds app).
 Reviews: 13,100 public Google Play reviews, 13 Jul – 4 Oct 2026 (12 weeks).
 
+## Live prototype
+**https://claude.ai/artifact/JyLrFYpKxot7DJoBGzwMeW** (`prototype/index.html`, data in `prototype/data.json`).
+Four steps: review intelligence (themes, trends, quotes, fee-confusion scan recomputed in the browser, review explorer),
+weekly pulse, fee explainer with the retrieved official facts, and the approval gate. Approving appends the entry to a
+shared "Product Pulse Notes" log and saves the email draft (never sent) in the page's own store; "Try calling the tools
+without approval" shows the tools refusing a forged token. Rebuild the data with `python prototype/export_data.py`.
+
 ## How to run
 ```bash
 pip install -r requirements.txt
@@ -33,9 +40,10 @@ No LLM key is needed. Generation is template-based over retrieved evidence (see 
 
 ## What fee issue was identified from reviews
 **"Hidden" / unexplained charges deducted on sell orders**: the stack of DP charge + GST + statutory
-levies on top of brokerage. 28 reviews combine a charge term with confusion language (hidden, deducted, not told…),
-the highest of the buckets scanned (brokerage level: 22, mostly "too expensive" rather than "unclear";
-DDPI fee: 4; auto square-off: 4). Typical review: "Too many hidden charges…".
+levies on top of brokerage. 24 reviews rated ≤3★ combine a charge term with confusion language (hidden, deducted, not told…),
+the highest of the buckets scanned (brokerage level: 15, mostly "too expensive" rather than "unclear"; statutory taxes: 6;
+auto square-off: 3; AMC: 2; DDPI fee: 2). Typical review: "Too many hidden charges…".
+Only ≤3★ reviews count, because 5★ praise such as "no hidden charges" also contains the word "hidden".
 Note: the sample fee in the brief (exit load) appears in 1 of 13,100 reviews, so it was not used.
 Per-bucket counts: `out/insights.json` -> `fee_issue.all_buckets`.
 
@@ -43,7 +51,7 @@ Per-bucket counts: `out/insights.json` -> `fee_issue.all_buckets`.
 1. **Review intelligence** (`pipeline.py`): keep English reviews ≥100 chars (940; shorter ones like "good app" carry no topic),
    embed with `all-MiniLM-L6-v2`, KMeans k=5, label clusters by keyword lift, rank by number of ≤3★ reviews, take top 3,
    pick one verbatim quote per theme.
-2. **Weekly pulse** (`out/weekly_pulse.md`, 239 words, asserted ≤250).
+2. **Weekly pulse** (`out/weekly_pulse.md`, 249 words, asserted ≤250).
 3. **Fee explainer** (`out/fee_explainer.md`): retrieves facts from `data/sources/official_facts.md`
    (embedding similarity), ≤6 bullets, 2 official links, "Last checked".
 
@@ -64,4 +72,4 @@ Per-bucket counts: `out/insights.json` -> `fee_issue.all_buckets`.
 | Email draft | `out/email_drafts/2026-10-04.txt` (+ `.eml`) |
 | Reviews CSV sample | `data/reviews_sample.csv` (full: `data/groww_reviews_12w.csv`) |
 | Source list | `sources.md` |
-| Demo | run `streamlit run app.py` (record ≤3 min) |
+| Working prototype | https://claude.ai/artifact/JyLrFYpKxot7DJoBGzwMeW (or run `streamlit run app.py` locally) |

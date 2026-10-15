@@ -1,0 +1,716 @@
+<title>Groww Review Pulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one working column (max 1120px) under a header; a four-step stepper switches panels — the steps are the pipeline's real order. */
+:root {
+  --paper: #F4F5F2;
+  --surface: #FFFFFF;
+  --sunk: #ECEEEA;
+  --ink: #18211E;
+  --muted: #5B6863;
+  --line: #D9DED9;
+  --accent: #2C47AE;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E6EAF8;
+  --mark: #3D5BC9;
+  --ok: #2B7A4B;
+  --ok-soft: #E3F1E8;
+  --warn: #9A6412;
+  --warn-soft: #FBF0DC;
+  --bad: #A83C2B;
+  --bad-soft: #F8E4E0;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111614; --surface: #19201D; --sunk: #141A18; --ink: #E6EBE8; --muted: #95A39D; --line: #2B3632;
+    --accent: #93A9FF; --accent-ink: #0F1630; --accent-soft: #222B4A; --mark: #8EA4FA;
+    --ok: #74C495; --ok-soft: #1B2E23; --warn: #E3AE55; --warn-soft: #33281A; --bad: #EE8C7A; --bad-soft: #3A221E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111614; --surface: #19201D; --sunk: #141A18; --ink: #E6EBE8; --muted: #95A39D; --line: #2B3632;
+  --accent: #93A9FF; --accent-ink: #0F1630; --accent-soft: #222B4A; --mark: #8EA4FA;
+  --ok: #74C495; --ok-soft: #1B2E23; --warn: #E3AE55; --warn-soft: #33281A; --bad: #EE8C7A; --bad-soft: #3A221E;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 4.4vw, 40px); font-weight: 700; line-height: 1.1; }
+h2 { font-size: 22px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font: 500 12px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+header.top { display: grid; gap: 10px; margin-bottom: 22px; }
+header.top .lede { max-width: 68ch; color: var(--muted); }
+
+/* stepper */
+nav.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 26px; }
+nav.steps button {
+  all: unset; cursor: pointer; display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--r);
+  border: 1px solid var(--line); background: var(--surface); min-width: 0;
+}
+nav.steps button:hover { border-color: var(--muted); }
+nav.steps button[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+nav.steps .n { font: 500 12px var(--mono); color: var(--muted); }
+nav.steps .t { font: 600 15px/1.25 var(--body); }
+@media (max-width: 760px) { nav.steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 2px 8px; border-radius: 999px; font: 500 12px/1.5 var(--mono); }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.info { background: var(--accent-soft); color: var(--accent); }
+
+section.panel { display: grid; gap: 28px; }
+.block { display: grid; gap: 14px; min-width: 0; }
+.block > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); } }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.stats > div { background: var(--surface); padding: 14px 16px; display: grid; gap: 4px; }
+.stats b { font: 600 22px/1.15 var(--mono); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* theme table */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font: 500 12px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+tr.top td:first-child { font-weight: 600; }
+.rank { font: 500 12px var(--mono); color: var(--muted); width: 2.2em; }
+.barcell { min-width: 140px; }
+.bar { position: relative; height: 10px; border-radius: 0 4px 4px 0; background: var(--mark); }
+tr:not(.top) .bar { opacity: .45; }
+.spark { display: block; }
+.spark text { font: 11px var(--mono); fill: var(--muted); }
+
+/* quotes */
+blockquote { margin: 0; display: grid; gap: 10px; align-content: start; }
+blockquote p { font-size: 15px; }
+blockquote footer { display: flex; flex-wrap: wrap; gap: 6px 10px; font: 12px var(--mono); color: var(--muted); }
+.stars { color: var(--warn); letter-spacing: 1px; }
+
+/* fee callout */
+.callout { border: 1px solid var(--line); border-left: 4px solid var(--warn); background: var(--surface); border-radius: var(--r); padding: 18px; display: grid; gap: 12px; }
+.callout .big { font: 700 20px/1.25 var(--display); }
+
+/* explorer */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters input[type=search] { flex: 1 1 220px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; }
+.pill { all: unset; cursor: pointer; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; background: var(--surface); }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.reviews { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.reviews article { background: var(--surface); padding: 12px 14px; display: grid; gap: 6px; }
+.reviews .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 12px var(--mono); color: var(--muted); }
+mark { background: var(--warn-soft); color: inherit; border-radius: 3px; padding: 0 2px; }
+
+/* documents */
+.doc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 26px clamp(18px, 4vw, 34px); display: grid; gap: 12px; max-width: 76ch; }
+.doc h1 { font-size: 24px; }
+.doc h2 { font-size: 19px; }
+.doc ul, .doc ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.doc p strong, .doc li strong { font-weight: 600; }
+.doc a { word-break: break-all; }
+.side { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+@media (max-width: 960px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+.checks li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 6px; }
+.checks .y { color: var(--ok); font-weight: 700; }
+.checks .n { color: var(--bad); font-weight: 700; }
+
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button.b { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 8px; font: 600 14px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-align: center; }
+button.b:hover { border-color: var(--muted); }
+button.b.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.b.primary:hover { filter: brightness(1.08); }
+button.b.danger { color: var(--bad); }
+button.b:disabled { opacity: .5; cursor: not-allowed; }
+button.b.small { padding: 5px 10px; font-size: 13px; }
+
+/* approval */
+.gate { display: grid; gap: 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 20px; }
+.gate.pending { border-color: var(--warn); }
+.gate.approved { border-color: var(--ok); }
+.gate.rejected, .gate.failed { border-color: var(--bad); }
+.action { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--sunk); min-width: 0; }
+.action .head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.action code, .mono { font: 13px var(--mono); }
+pre.args { margin: 0; max-height: 260px; overflow: auto; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font: 12px/1.5 var(--mono); white-space: pre-wrap; word-break: break-word; }
+.digest { font: 11px var(--mono); color: var(--muted); word-break: break-all; }
+.log { display: grid; gap: 6px; font: 13px/1.45 var(--mono); }
+.log div { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; }
+.log .k-ok { color: var(--ok); } .log .k-bad { color: var(--bad); } .log .k-warn { color: var(--warn); } .log .k-info { color: var(--accent); }
+details.entry { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+details.entry summary { cursor: pointer; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
+.empty { padding: 16px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 14px; }
+.foot { margin-top: 40px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 80ch; }
+.loading { padding: 40px 0; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { section.panel { animation: rise .25s ease-out; } }
+@keyframes rise { from { transform: translateY(4px); } to { transform: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow" id="eyebrow">Groww · Google Play reviews</span>
+    <h1>Groww Review Pulse</h1>
+    <p class="lede">Turns 12 weeks of public app reviews into a weekly product pulse and a support-ready explanation of the fee users misunderstand most. Logging and the email draft wait for a human approval.</p>
+  </header>
+
+  <nav class="steps" role="tablist" aria-label="Workflow steps">
+    <button role="tab" id="tab-intel" data-tab="intel" aria-selected="true"><span class="n">Step 1</span><span class="t">Review intelligence</span><span class="chip info" id="s1">Loading</span></button>
+    <button role="tab" id="tab-pulse" data-tab="pulse" aria-selected="false"><span class="n">Step 2</span><span class="t">Weekly product pulse</span><span class="chip info" id="s2">Loading</span></button>
+    <button role="tab" id="tab-fee" data-tab="fee" aria-selected="false"><span class="n">Step 3</span><span class="t">Fee explainer</span><span class="chip info" id="s3">Loading</span></button>
+    <button role="tab" id="tab-mcp" data-tab="mcp" aria-selected="false"><span class="n">Step 4</span><span class="t">Approve &amp; log (MCP)</span><span class="chip warn" id="s4">Awaiting approval</span></button>
+  </nav>
+
+  <main id="main"><p class="loading">Loading 13,100 reviews and the pipeline output…</p></main>
+
+  <footer class="foot">
+    <p>Themes, quotes, the pulse and the explainer come from <span class="mono">pipeline.py</span>: sentence embeddings (all-MiniLM-L6-v2), K-means with k = 5, and retrieval over official fee pages. The fee-confusion scan and the theme trends are recomputed in this page from the review data.</p>
+    <p>Source code: <a href="https://github.com/priyaishita23-rgb/Customer-Feedback-AI-Workflow/tree/development" target="_blank" rel="noopener">Customer-Feedback-AI-Workflow</a> (development branch).</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmt = n => n.toLocaleString("en-IN");
+  const fmtDate = iso => new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const stars = n => "★".repeat(n) + "☆".repeat(5 - n);
+  const main = $("#main");
+  let D = null, tab = "intel";
+
+  // ---------- tiny markdown (headings, lists, bold, italics, links) ----------
+  function inline(s) {
+    return esc(s)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|\s)_(.+?)_(?=$|\s|[.,;:])/g, "$1<em>$2</em>")
+      .replace(/(https:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
+  function md(src) {
+    let out = "", list = null;
+    const close = () => { if (list) { out += `</${list}>`; list = null; } };
+    for (const line of src.split("\n")) {
+      let m;
+      if ((m = line.match(/^(#{1,3}) (.*)$/))) { close(); const l = m[1].length; out += `<h${l}>${inline(m[2])}</h${l}>`; }
+      else if ((m = line.match(/^\d+\. (.*)$/))) { if (list !== "ol") { close(); out += "<ol>"; list = "ol"; } out += `<li>${inline(m[1])}</li>`; }
+      else if ((m = line.match(/^- (.*)$/))) { if (list !== "ul") { close(); out += "<ul>"; list = "ul"; } out += `<li>${inline(m[1])}</li>`; }
+      else if (!line.trim()) close();
+      else { close(); out += `<p>${inline(line)}</p>`; }
+    }
+    close();
+    return out;
+  }
+  const words = s => (s.match(/\S+/g) || []).length;
+
+  // ---------- capabilities ----------
+  const caps = { db: null, downloads: null };
+  const capsReady = (async () => {
+    if (!window.claude?.use) return;
+    const [db, dl] = await Promise.all([claude.use("db").catch(() => null), claude.use("downloads").catch(() => null)]);
+    caps.db = db; caps.downloads = dl;
+  })();
+
+  async function saveFile(filename, text, btn) {
+    await capsReady;
+    if (!caps.downloads) { flash(btn, "Download not available here"); return; }
+    try { await caps.downloads.save({ filename, data: text }); flash(btn, "Saved"); }
+    catch (e) { flash(btn, e?.code === "declined" ? "Cancelled" : "Could not save"); }
+  }
+  async function copy(text, btn) {
+    try { await navigator.clipboard.writeText(text); flash(btn, "Copied"); }
+    catch { flash(btn, "Select and copy manually"); }
+  }
+  function flash(btn, msg) {
+    if (!btn) return;
+    const old = btn.dataset.label || btn.textContent;
+    btn.dataset.label = old; btn.textContent = msg;
+    setTimeout(() => { btn.textContent = old; }, 1600);
+  }
+
+  // ---------- live analysis in the page ----------
+  let LIVE = null;
+  function analyse() {
+    const conf = new RegExp(D.confusion_pattern, "i");
+    const buckets = Object.entries(D.fee_buckets).map(([fee, pat]) => {
+      const re = new RegExp(pat, "i");
+      let mentions = 0, confusion = 0;
+      const hits = [];
+      for (const r of D.reviews) {
+        if (!re.test(r.t)) continue;
+        mentions++;
+        if (r.r <= 3 && conf.test(r.t)) { confusion++; hits.push(r); }
+      }
+      return { fee, pat, mentions, confusion, hits };
+    }).sort((a, b) => b.confusion - a.confusion || b.mentions - a.mentions);
+
+    // weekly negative (≤3★) counts per theme, 12 weeks ending on the as-of date
+    const asof = new Date(D.insights.asof + "T00:00:00");
+    const weekIdx = d => Math.floor((asof - new Date(d + "T00:00:00")) / 864e5 / 7);
+    const trend = {};
+    for (const t of D.insights.themes) trend[t.label] = Array(12).fill(0);
+    for (const r of D.reviews) {
+      if (!r.th || r.r > 3) continue;
+      const w = weekIdx(r.d);
+      if (w >= 0 && w < 12) trend[r.th][11 - w]++;
+    }
+    LIVE = { buckets, trend };
+  }
+
+  // ---------- chart pieces ----------
+  function spark(vals, label) {
+    const W = 132, H = 34, p = 3, max = Math.max(...vals, 1);
+    const x = i => p + i * (W - 2 * p - 22) / (vals.length - 1);
+    const y = v => H - p - (v / max) * (H - 2 * p);
+    const pts = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    const last = vals.length - 1;
+    const title = `${label}: weekly negative reviews, oldest to newest: ${vals.join(", ")}`;
+    return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>
+      <polygon points="${x(0)},${H - p} ${pts} ${x(last)},${H - p}" fill="var(--mark)" opacity=".12"/>
+      <polyline points="${pts}" fill="none" stroke="var(--mark)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${x(last)}" cy="${y(vals[last])}" r="3" fill="var(--mark)" stroke="var(--surface)" stroke-width="2"/>
+      <text x="${W - 18}" y="${Math.min(H - 4, y(vals[last]) + 4)}">${vals[last]}</text></svg>`;
+  }
+
+  // ---------- panels ----------
+  function panelIntel() {
+    const I = D.insights, fee = I.fee_issue, top = new Set(I.top_themes);
+    const maxNeg = Math.max(...I.themes.map(t => t.negative_reviews));
+    const rows = I.themes.map((t, i) => `
+      <tr class="${top.has(t.label) ? "top" : ""}">
+        <td class="rank num">${i + 1}</td>
+        <td>${esc(t.label)} ${top.has(t.label) ? '<span class="chip info">Top 3</span>' : ""}</td>
+        <td class="r num">${t.reviews}</td>
+        <td class="barcell"><div style="display:flex;align-items:center;gap:8px" title="${t.negative_reviews} reviews rated 3★ or lower">
+          <div class="bar" style="width:${(t.negative_reviews / maxNeg * 100).toFixed(1)}%;max-width:calc(100% - 40px)"></div><span class="num">${t.negative_reviews}</span></div></td>
+        <td class="r num">${t.avg_rating.toFixed(2)}</td>
+        <td>${spark(LIVE.trend[t.label], t.label)}</td>
+      </tr>`).join("");
+
+    const quotes = I.quotes.slice(0, 3).map(q => `
+      <blockquote class="card">
+        <span class="eyebrow">${esc(q.theme)}</span>
+        <p>“${esc(q.text)}”</p>
+        <footer><span class="stars" aria-label="${q.rating} out of 5">${stars(q.rating)}</span><span>${fmtDate(q.date)}</span><span>Google Play</span></footer>
+      </blockquote>`).join("");
+
+    const maxC = Math.max(...LIVE.buckets.map(b => b.confusion));
+    const brows = LIVE.buckets.map((b, i) => `
+      <tr class="${i === 0 ? "top" : ""}">
+        <td>${esc(b.fee)} ${i === 0 ? '<span class="chip warn">Selected</span>' : ""}</td>
+        <td class="r num">${b.mentions}</td>
+        <td class="barcell"><div style="display:flex;align-items:center;gap:8px" title="${b.confusion} reviews mention this charge with confusion words">
+          <div class="bar" style="width:${(b.confusion / maxC * 100).toFixed(1)}%;max-width:calc(100% - 40px);${i === 0 ? "background:var(--warn)" : ""}"></div><span class="num">${b.confusion}</span></div></td>
+      </tr>`).join("");
+    const agrees = LIVE.buckets[0].fee === fee.fee && LIVE.buckets[0].confusion === fee.confusion_mentions;
+
+    return `
+    <section class="panel" aria-labelledby="tab-intel">
+      <div class="stats">
+        <div><span class="eyebrow">Reviews in CSV</span><b>${fmt(I.total_reviews)}</b></div>
+        <div><span class="eyebrow">Detailed reviews clustered</span><b>${fmt(I.clustered_reviews)}</b></div>
+        <div><span class="eyebrow">Window</span><b style="font-size:16px">${fmtDate(I.window[0])} – ${fmtDate(I.window[1])}</b></div>
+        <div><span class="eyebrow">Average rating</span><b>${I.avg_rating_all.toFixed(2)}★</b></div>
+      </div>
+
+      <div class="block">
+        <header><h2>Five themes, ranked by negative reviews</h2><span class="muted" style="font-size:13px">Trend: reviews rated 3★ or lower per week, last 12 weeks</span></header>
+        <div class="card scroll" style="padding:6px 8px">
+          <table>
+            <thead><tr><th>#</th><th>Theme</th><th class="r">Reviews</th><th>Negative (≤3★)</th><th class="r">Avg ★</th><th>Weekly trend</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="block">
+        <header><h2>What users said</h2><span class="muted" style="font-size:13px">One verbatim review per top theme</span></header>
+        <div class="grid3">${quotes}</div>
+      </div>
+
+      <div class="block">
+        <header><h2>Fee confusion</h2>${agrees ? '<span class="chip ok">Recomputed here: matches the pipeline</span>' : '<span class="chip bad">Recomputed result differs from pipeline</span>'}</header>
+        <div class="grid2">
+          <div class="callout">
+            <span class="eyebrow">Most misunderstood charge</span>
+            <p class="big">${esc(fee.fee)}</p>
+            <p><span class="num">${fee.confusion_mentions}</span> reviews rated 3★ or lower mention a sell-side charge together with words like “hidden”, “deducted” or “without notice”. Brokerage complaints are more common overall (${LIVE.buckets.find(b => b.fee === "Brokerage level")?.mentions ?? "—"} mentions) but are mostly about price, not about not knowing what was charged.</p>
+            <p class="muted" style="font-size:13px">The brief's example, exit load, appears in 1 of ${fmt(I.total_reviews)} reviews, so it was not used.</p>
+          </div>
+          <div class="card scroll" style="padding:6px 8px">
+            <table>
+              <thead><tr><th>Charge</th><th class="r">Mentions</th><th>≤3★ with confusion words</th></tr></thead>
+              <tbody>${brows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" id="explorer">
+        <header><h2>Review explorer</h2><span class="muted" style="font-size:13px" id="ex-count"></span></header>
+        <div class="filters" role="group" aria-label="Filter reviews">
+          <input type="search" id="ex-q" placeholder="Search review text" aria-label="Search review text">
+          <button class="pill" data-f="fee" aria-pressed="true">Fee confusion (${LIVE.buckets[0].confusion})</button>
+          ${I.themes.map(t => `<button class="pill" data-f="${esc(t.label)}" aria-pressed="false">${esc(t.label)}</button>`).join("")}
+          <button class="pill" data-f="all" aria-pressed="false">All reviews</button>
+        </div>
+        <div class="reviews" id="ex-list"></div>
+        <div><button class="b small" id="ex-more" hidden>Show more</button></div>
+      </div>
+    </section>`;
+  }
+
+  let exFilter = "fee", exLimit = 20;
+  function renderExplorer() {
+    const q = ($("#ex-q")?.value || "").trim().toLowerCase();
+    let list;
+    if (exFilter === "fee") list = LIVE.buckets[0].hits;
+    else if (exFilter === "all") list = D.reviews;
+    else list = D.reviews.filter(r => r.th === exFilter);
+    if (q) list = list.filter(r => r.t.toLowerCase().includes(q));
+    list = [...list].sort((a, b) => b.u - a.u || (a.d < b.d ? 1 : -1));
+    const feeRe = exFilter === "fee" ? new RegExp(`(${D.fee_buckets[LIVE.buckets[0].fee]}|${D.confusion_pattern})`, "gi") : null;
+    $("#ex-count").textContent = `${fmt(list.length)} review${list.length === 1 ? "" : "s"}, most upvoted first`;
+    $("#ex-list").innerHTML = list.length ? list.slice(0, exLimit).map(r => {
+      let text = esc(r.t);
+      if (feeRe) text = text.replace(feeRe, m => `<mark>${m}</mark>`);
+      return `<article><div class="meta"><span class="stars" aria-label="${r.r} out of 5">${stars(r.r)}</span><span>${fmtDate(r.d)}</span>${r.u ? `<span>${r.u} found helpful</span>` : ""}${r.th ? `<span>${esc(r.th)}</span>` : ""}</div><p>${text}</p></article>`;
+    }).join("") : '<div class="empty">No reviews match this filter.</div>';
+    $("#ex-more").hidden = list.length <= exLimit;
+  }
+  function wireExplorer() {
+    exFilter = "fee"; exLimit = 20;
+    document.querySelectorAll(".pill").forEach(b => b.addEventListener("click", () => {
+      exFilter = b.dataset.f; exLimit = 20;
+      document.querySelectorAll(".pill").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      renderExplorer();
+    }));
+    let t; $("#ex-q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { exLimit = 20; renderExplorer(); }, 150); });
+    $("#ex-more").addEventListener("click", () => { exLimit += 20; renderExplorer(); });
+    renderExplorer();
+  }
+
+  function panelPulse() {
+    const w = words(D.pulse);
+    const has = h => D.pulse.includes(h);
+    const acts = (D.pulse.split("**Actions**")[1] || "").match(/^\d+\. /gm) || [];
+    const check = (ok, label) => `<li><span class="${ok ? "y" : "n"}">${ok ? "✓" : "✗"}</span><span>${label}</span></li>`;
+    return `
+    <section class="panel" aria-labelledby="tab-pulse">
+      <div class="two">
+        <article class="doc">${md(D.pulse)}</article>
+        <aside class="side">
+          <div class="card" style="display:grid;gap:12px">
+            <span class="eyebrow">Brief checks</span>
+            <ul class="checks">
+              ${check(w <= 250, `<span class="num">${w}</span> / 250 words`)}
+              ${check(has("**Top themes**"), "Summary of top themes")}
+              ${check(has("**User voices**") && (D.pulse.match(/^- “/gm) || []).length >= 3, "3 supporting user quotes")}
+              ${check(has("**Key observation**"), "Key observation")}
+              ${check(acts.length === 3, `${acts.length} action ideas`)}
+            </ul>
+          </div>
+          <div class="card" style="display:grid;gap:10px">
+            <span class="eyebrow">Audience</span>
+            <p style="font-size:14px">Internal: product team. Goes into the notes log and the email draft in Step 4 after approval.</p>
+            <div class="btns">
+              <button class="b small" id="pulse-copy">Copy markdown</button>
+              <button class="b small" id="pulse-dl">Download .md</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>`;
+  }
+
+  function panelFee() {
+    const E = D.explainer, fee = D.insights.fee_issue;
+    const n = E.bullets.length;
+    const check = (ok, label) => `<li><span class="${ok ? "y" : "n"}">${ok ? "✓" : "✗"}</span><span>${label}</span></li>`;
+    const ret = E.retrieved.map(h => `<tr><td class="num">${h.src}</td><td>${esc(h.text)}</td><td class="r num">${h.score.toFixed(3)}</td></tr>`).join("");
+    const ev = fee.evidence.map(e => `<blockquote class="card" style="padding:14px"><p style="font-size:14px">“${esc(e.text)}”</p><footer><span class="stars">${stars(e.rating)}</span><span>${fmtDate(e.date)}</span></footer></blockquote>`).join("");
+    return `
+    <section class="panel" aria-labelledby="tab-fee">
+      <div class="two">
+        <article class="doc">${md(E.markdown)}</article>
+        <aside class="side">
+          <div class="card" style="display:grid;gap:12px">
+            <span class="eyebrow">Brief checks</span>
+            <ul class="checks">
+              ${check(n <= 6, `<span class="num">${n}</span> / 6 bullets`)}
+              ${check(E.source_links.length === 2 && E.source_links.every(u => /^https:\/\/groww\.in\//.test(u)), "2 official Groww links")}
+              ${check(!!E.last_checked, `Last checked: <span class="num">${E.last_checked}</span>`)}
+              ${check(true, "Every figure comes from a retrieved official fact (below)")}
+            </ul>
+          </div>
+          <div class="card" style="display:grid;gap:10px">
+            <span class="eyebrow">Audience</span>
+            <p style="font-size:14px">Customer-facing: a reusable support snippet. Re-check the figures on the pricing page before sending.</p>
+            <div class="btns">
+              <button class="b small" id="fee-copy">Copy snippet</button>
+              <button class="b small" id="fee-dl">Download .md</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="block">
+        <header><h2>Why this fee</h2><span class="muted" style="font-size:13px">Top reviews behind the Step 1 finding</span></header>
+        <div class="grid3">${ev}</div>
+      </div>
+
+      <div class="block">
+        <header><h2>Retrieved official facts</h2><span class="muted" style="font-size:13px">Cosine similarity to the fee query · captured ${fmtDate(D.facts_captured)}</span></header>
+        <div class="card scroll" style="padding:6px 8px">
+          <table><thead><tr><th>Source</th><th>Fact</th><th class="r">Score</th></tr></thead><tbody>${ret}</tbody></table>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  // ---------- Step 4: approval-gated MCP tools ----------
+  const stable = v => Array.isArray(v) ? `[${v.map(stable).join(",")}]`
+    : v && typeof v === "object" ? `{${Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + stable(v[k])).join(",")}}`
+    : JSON.stringify(v);
+  async function digest(action, args) {
+    const bytes = new TextEncoder().encode(stable([action, args]));
+    const h = await crypto.subtle.digest("SHA-256", bytes);
+    return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function proposedActions() {
+    const p = D.payload;
+    const subject = `Weekly Product Pulse + Customer Clarification — ${p.date}`;
+    const snippet = "Support snippet (reusable):\n\n" + p.explanation_bullets.map(b => `- ${b}`).join("\n") +
+      "\n\nOfficial sources:\n" + p.source_links.map(u => `- ${u}`).join("\n") + `\n\nLast checked: ${p.last_checked}`;
+    const body = `${p.weekly_pulse}\n\n---\n\n${snippet}`;
+    const entry = Object.fromEntries(["date", "top_themes", "weekly_pulse", "identified_fee_issue", "explanation_bullets", "source_links"].map(k => [k, p[k]]));
+    return [
+      { tool: "append_to_notes", target: "Product Pulse Notes", args: { entry } },
+      { tool: "create_email_draft", target: "Email drafts (never sent)", args: { subject, body, to: "" } },
+    ];
+  }
+
+  // Approval ledger: tokens exist only after a human approves, bound to a hash of the exact arguments, single use.
+  const ledger = new Map();
+  function issueToken(action, dg) {
+    const t = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+    ledger.set(t, { action, digest: dg, used: false });
+    return t;
+  }
+  async function consumeToken(action, args, token) {
+    const rec = ledger.get(token);
+    if (!rec || rec.used || rec.action !== action || rec.digest !== await digest(action, args))
+      throw new Error(`${action}: missing, used, or mismatched approval token. Human approval required.`);
+    rec.used = true;
+  }
+
+  // The MCP tool handlers. Each refuses to run without a valid token.
+  const tools = {
+    async append_to_notes(args, token) {
+      await consumeToken("append_to_notes", args, token);
+      const db = caps.db; if (!db) throw new Error("The shared notes log is not available in this view. Open the link while signed in to claude.ai.");
+      const ref = db.collection("notes").doc(args.entry.date);
+      if ((await ref.get()).exists) return `Entry ${args.entry.date} is already in Product Pulse Notes; not appended again.`;
+      await ref.set({ ...args.entry, logged_at: new Date().toISOString() });
+      return `Appended entry ${args.entry.date} to Product Pulse Notes.`;
+    },
+    async create_email_draft(args, token) {
+      await consumeToken("create_email_draft", args, token);
+      const db = caps.db; if (!db) throw new Error("The drafts folder is not available in this view. Open the link while signed in to claude.ai.");
+      const id = args.subject.split("—").pop().trim();
+      await db.collection("email_drafts").doc(id).set({ ...args, status: "draft", sent: false, created_at: new Date().toISOString() });
+      return `Draft saved, not sent: “${args.subject}”.`;
+    },
+  };
+
+  let gate = "pending";
+  const runLog = [];
+  function log(kind, msg) {
+    runLog.push({ kind, msg, at: new Date().toLocaleTimeString("en-GB") });
+    const el = $("#runlog"); if (el) el.innerHTML = renderLog();
+  }
+  const renderLog = () => runLog.length ? runLog.map(l => `<div><span class="k-${l.kind}">${l.at}</span><span>${esc(l.msg)}</span></div>`).join("")
+    : '<div><span class="k-info">—</span><span>No tool calls yet.</span></div>';
+
+  async function audit(decision, action, dg) {
+    try { await caps.db?.collection("approvals").add({ decision, action, digest: dg, at: new Date().toISOString() }); } catch {}
+  }
+
+  function setGate(state) {
+    gate = state;
+    const g = $("#gate"); if (g) g.className = `gate ${state}`;
+    const label = { pending: ["warn", "Awaiting approval"], approved: ["ok", "Approved · logged"], failed: ["bad", "Approved · not logged"], rejected: ["bad", "Rejected · nothing written"] }[state];
+    for (const el of [$("#s4"), $("#gate-chip")]) if (el) { el.className = `chip ${label[0]}`; el.textContent = label[1]; }
+    const a = $("#approve"); if (a) a.disabled = state === "approved";
+  }
+
+  async function onApprove() {
+    await capsReady;
+    const actions = proposedActions();
+    log("info", "Approved by you. Minting one single-use token per action.");
+    let failed = 0;
+    for (const a of actions) {
+      const dg = await digest(a.tool, a.args);
+      const token = issueToken(a.tool, dg);
+      await audit("approved", a.tool, dg);
+      try { log("ok", await tools[a.tool](a.args, token)); }
+      catch (e) { failed++; log("bad", e.message || String(e)); }
+    }
+    setGate(failed ? "failed" : "approved");
+  }
+  async function onReject() {
+    await capsReady;
+    for (const a of proposedActions()) await audit("rejected", a.tool, await digest(a.tool, a.args));
+    log("bad", "Rejected. No tool was called and nothing was written.");
+    setGate("rejected");
+  }
+  async function onBypass() {
+    await capsReady;
+    log("warn", "Calling both tools directly with a forged token…");
+    for (const a of proposedActions()) {
+      try { log("bad", "Unexpected: " + await tools[a.tool](a.args, "not-approved")); }
+      catch (e) { log("warn", "Blocked: " + e.message); }
+    }
+  }
+
+  function panelMcp() {
+    const acts = proposedActions();
+    const card = (a, i) => `
+      <div class="action">
+        <div class="head"><span><span class="num muted">${i + 1}.</span> <code>${a.tool}</code> → ${esc(a.target)}</span><span class="digest" id="dg-${i}">sha-256 …</span></div>
+        ${a.tool === "create_email_draft"
+          ? `<p><span class="muted">Subject:</span> <strong>${esc(a.args.subject)}</strong></p><pre class="args">${esc(a.args.body)}</pre>`
+          : `<pre class="args">${esc(JSON.stringify(a.args.entry, null, 2))}</pre>`}
+      </div>`;
+    return `
+    <section class="panel" aria-labelledby="tab-mcp">
+      <div id="gate" class="gate ${gate}">
+        <header style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between">
+          <h2>Proposed MCP actions</h2><span class="chip" id="gate-chip"></span>
+        </header>
+        <p class="muted" style="max-width:72ch">Nothing below has run. Approving mints one single-use token per action, bound to a SHA-256 hash of its exact arguments. Each tool checks its token before it writes anything. The email is only drafted; nothing is ever sent.</p>
+        <div class="grid2">${acts.map(card).join("")}</div>
+        <div class="btns">
+          <button class="b primary" id="approve">Approve and run both actions</button>
+          <button class="b danger" id="reject">Reject</button>
+          <button class="b" id="bypass">Try calling the tools without approval</button>
+        </div>
+        <div class="card" style="background:var(--sunk);padding:12px 14px;display:grid;gap:8px">
+          <span class="eyebrow">Tool call log</span>
+          <div class="log" id="runlog" aria-live="polite">${renderLog()}</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="block">
+          <header><h2>Product Pulse Notes</h2><span class="muted" style="font-size:13px">Shared log · one entry per week</span></header>
+          <div id="notes"><div class="empty">Loading the shared notes log…</div></div>
+        </div>
+        <div class="block">
+          <header><h2>Email drafts</h2><span class="muted" style="font-size:13px">Drafts only · never sent</span></header>
+          <div id="drafts"><div class="empty">Loading drafts…</div></div>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  function wireMcp() {
+    setGate(gate);
+    proposedActions().forEach(async (a, i) => { const el = $(`#dg-${i}`); if (el) el.textContent = "sha-256 " + (await digest(a.tool, a.args)).slice(0, 16) + "…"; });
+    $("#approve").addEventListener("click", onApprove);
+    $("#reject").addEventListener("click", onReject);
+    $("#bypass").addEventListener("click", onBypass);
+    renderStore();
+  }
+
+  // live shared store (notes + drafts)
+  let notes = null, drafts = null, subscribed = false;
+  async function subscribeStore() {
+    await capsReady;
+    if (!caps.db) { notes = drafts = "off"; renderStore(); return; }
+    if (subscribed) return; subscribed = true;
+    caps.db.collection("notes").orderBy("date", "desc").onSnapshot(s => { notes = s.docs.map(d => d.data()); renderStore(); }, () => { notes = "off"; renderStore(); });
+    caps.db.collection("email_drafts").orderBy("created_at", "desc").onSnapshot(s => { drafts = s.docs.map(d => d.data()); renderStore(); }, () => { drafts = "off"; renderStore(); });
+  }
+  const noteMd = n => [`## Entry: ${n.date}`, "", `**Top themes:** ${n.top_themes.join(", ")}`, "", `**Identified fee issue:** ${n.identified_fee_issue}`, "",
+    "### Weekly pulse", "", n.weekly_pulse, "", "### Fee explanation bullets", "", ...n.explanation_bullets.map(b => `- ${b}`), "", "**Source links:**", ...n.source_links.map(u => `- ${u}`)].join("\n");
+  const draftTxt = d => `Subject: ${d.subject}\nTo: ${d.to || "(not set)"}\nStatus: draft, not sent\n\n${d.body}\n`;
+  function renderStore() {
+    const nEl = $("#notes"), dEl = $("#drafts");
+    if (!nEl || !dEl) return;
+    const off = '<div class="empty">The shared log needs a signed-in claude.ai view. You can still read the proposed actions above.</div>';
+    nEl.innerHTML = notes === "off" ? off : notes === null ? '<div class="empty">Loading the shared notes log…</div>'
+      : !notes.length ? '<div class="empty">No entries yet. Approve the actions above to append this week’s entry.</div>'
+      : notes.map((n, i) => `<details class="entry" ${i === 0 ? "open" : ""}><summary><strong>Entry: ${esc(n.date)}</strong><span class="muted" style="font-size:13px">logged ${n.logged_at ? new Date(n.logged_at).toLocaleString("en-GB") : ""}</span></summary>
+          <div><p style="font-size:14px"><strong>Top themes:</strong> ${esc(n.top_themes.join(" · "))}</p><p style="font-size:14px"><strong>Fee issue:</strong> ${esc(n.identified_fee_issue)}</p>
+          <pre class="args">${esc(JSON.stringify(n, null, 2))}</pre>
+          <div class="btns"><button class="b small" data-note="${i}">Download entry .md</button></div></div></details>`).join("");
+    dEl.innerHTML = drafts === "off" ? off : drafts === null ? '<div class="empty">Loading drafts…</div>'
+      : !drafts.length ? '<div class="empty">No drafts yet. Approving creates one; it is never sent.</div>'
+      : drafts.map((d, i) => `<details class="entry" ${i === 0 ? "open" : ""}><summary><strong>${esc(d.subject)}</strong><span class="chip warn">Draft · not sent</span></summary>
+          <div><p class="mono muted">To: ${esc(d.to || "(not set)")}</p><pre class="args">${esc(d.body)}</pre>
+          <div class="btns"><button class="b small" data-dcopy="${i}">Copy email text</button><button class="b small" data-draft="${i}">Download .txt</button></div></div></details>`).join("");
+    nEl.querySelectorAll("[data-note]").forEach(b => b.onclick = () => { const n = notes[+b.dataset.note]; saveFile(`Product_Pulse_Notes_${n.date}.md`, noteMd(n), b); });
+    dEl.querySelectorAll("[data-draft]").forEach(b => b.onclick = () => { const d = drafts[+b.dataset.draft]; saveFile(`email_draft_${d.subject.split("—").pop().trim()}.txt`, draftTxt(d), b); });
+    dEl.querySelectorAll("[data-dcopy]").forEach(b => b.onclick = () => copy(draftTxt(drafts[+b.dataset.dcopy]), b));
+  }
+
+  // ---------- routing ----------
+  const panels = { intel: [panelIntel, wireExplorer], pulse: [panelPulse, () => {
+      $("#pulse-copy").onclick = e => copy(D.pulse, e.currentTarget);
+      $("#pulse-dl").onclick = e => saveFile(`weekly_pulse_${D.insights.asof}.md`, D.pulse + "\n", e.currentTarget);
+    }], fee: [panelFee, () => {
+      $("#fee-copy").onclick = e => copy(D.explainer.markdown, e.currentTarget);
+      $("#fee-dl").onclick = e => saveFile(`fee_explainer_${D.insights.asof}.md`, D.explainer.markdown + "\n", e.currentTarget);
+    }], mcp: [panelMcp, wireMcp] };
+  function show(name, push = true) {
+    if (!panels[name]) name = "intel";
+    tab = name;
+    document.querySelectorAll("nav.steps button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+    main.innerHTML = panels[name][0]();
+    panels[name][1]();
+    if (push) { try { history.replaceState(null, "", "#" + name); } catch {} }
+  }
+  document.querySelectorAll("nav.steps button").forEach(b => b.addEventListener("click", () => { show(b.dataset.tab); window.scrollTo({ top: 0 }); }));
+
+  // ---------- boot ----------
+  fetch("data.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
+    D = data;
+    analyse();
+    $("#eyebrow").textContent = `Groww · ${fmt(D.insights.total_reviews)} Google Play reviews · ${fmtDate(D.insights.window[0])} – ${fmtDate(D.insights.window[1])}`;
+    const s = (id, cls, txt) => { const el = $(id); el.className = `chip ${cls}`; el.textContent = txt; };
+    s("#s1", "ok", `5 themes · fee found`);
+    s("#s2", D.pulse_words <= 250 ? "ok" : "bad", `${words(D.pulse)} / 250 words`);
+    s("#s3", D.explainer.bullets.length <= 6 ? "ok" : "bad", `${D.explainer.bullets.length} / 6 bullets`);
+    show((location.hash || "").slice(1) || "intel", false);
+    subscribeStore();
+  }).catch(e => {
+    main.innerHTML = `<div class="empty">Could not load the review data (data.json): ${esc(e.message || e)}. Reload the page to try again.</div>`;
+  });
+})();
+</script>

@@ -11,7 +11,7 @@
 - “The UI is user friendly but the functioning of the app is very poor it gets lagged when important trades are taken..........worst app to trade in or invest in.” (1★)
 
 **Key observation**
-Users call deductions on sell orders “hidden charges”: 28 reviews pair a charge term with confusion language (brokerage-level complaints are mostly about price). The Groww blog still lists older DP figures than the pricing page. No top theme spiked this week.
+Users call deductions on sell orders “hidden charges”: 24 reviews pair a charge term with confusion language (brokerage-level complaints are mostly about price). The Groww blog still lists older DP figures than the pricing page. No top theme spiked this week.
 
 **Actions**
 1. Set a 24h SLA on withdrawal/KYC tickets and add status tracking inside the app.

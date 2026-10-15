@@ -126,11 +126,12 @@ def pick_quote(sub: pd.DataFrame, centroid: np.ndarray, emb: np.ndarray, prefer:
 
 
 def detect_fee_issue(df: pd.DataFrame) -> dict:
-    """Pick the fee bucket with the most reviews that mention it AND use confusion language."""
+    """Pick the fee bucket with the most <=3-star reviews that mention it AND use confusion language.
+    The rating filter drops praise such as "no hidden charges" (5 stars), which also matches "hidden"."""
     rows = []
     for name, spec in FEE_BUCKETS.items():
         m = df["text"].str.contains(spec["pattern"], case=False, regex=True)
-        c = m & df["text"].str.contains(CONFUSION)
+        c = m & df["text"].str.contains(CONFUSION) & (df["rating"] <= 3)
         rows.append(dict(fee=name, mentions=int(m.sum()), confusion_mentions=int(c.sum()), query=spec["query"]))
     rows.sort(key=lambda r: (r["confusion_mentions"], r["mentions"]), reverse=True)
     top = rows[0]
