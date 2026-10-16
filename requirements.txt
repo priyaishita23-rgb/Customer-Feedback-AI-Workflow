@@ -1,0 +1,6 @@
+pandas
+scikit-learn
+sentence-transformers
+streamlit
+mcp<2
+google-play-scraper
