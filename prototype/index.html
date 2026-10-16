@@ -258,8 +258,20 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
     caps.db = db; caps.downloads = dl;
   })();
 
+  // ---------- Streamlit host (app.py): Step 4 runs on the Python MCP server ----------
+  const ST = window.PULSE_HOST === "streamlit";
+  const stPost = msg => { try { window.parent.postMessage({ isStreamlitMessage: true, apiVersion: 1, ...msg }, "*"); } catch {} };
+  const stSend = action => stPost({ type: "streamlit:setComponentValue", value: { action, nonce: `${Date.now()}-${Math.random()}` }, dataType: "json" });
+
   async function saveFile(filename, text, btn) {
     await capsReady;
+    if (!caps.downloads && ST) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+      a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      flash(btn, "Saved"); return;
+    }
     if (!caps.downloads) { flash(btn, "Download not available here"); return; }
     try { await caps.downloads.save({ filename, data: text }); flash(btn, "Saved"); }
     catch (e) { flash(btn, e?.code === "declined" ? "Cancelled" : "Could not save"); }
@@ -593,6 +605,7 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
   }
 
   async function onApprove() {
+    if (ST) { log("info", "Approved by you. Sending the decision to the MCP server…"); stSend("approve"); return; }
     await capsReady;
     const actions = proposedActions();
     log("info", "Approved by you. Minting one single-use token per action.");
@@ -607,12 +620,14 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
     setGate(failed ? "failed" : "approved");
   }
   async function onReject() {
+    if (ST) { stSend("reject"); return; }
     await capsReady;
     for (const a of proposedActions()) await audit("rejected", a.tool, await digest(a.tool, a.args));
     log("bad", "Rejected. No tool was called and nothing was written.");
     setGate("rejected");
   }
   async function onBypass() {
+    if (ST) { log("warn", "Calling both MCP tools directly with a forged token…"); stSend("bypass"); return; }
     await capsReady;
     log("warn", "Calling both tools directly with a forged token…");
     for (const a of proposedActions()) {
@@ -636,7 +651,7 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
         <header style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between">
           <h2>Proposed MCP actions</h2><span class="chip" id="gate-chip"></span>
         </header>
-        <p class="muted" style="max-width:72ch">Nothing below has run. Approving mints one single-use token per action, bound to a SHA-256 hash of its exact arguments. Each tool checks its token before it writes anything. The email is only drafted; nothing is ever sent.</p>
+        <p class="muted" style="max-width:72ch">Nothing below has run. Approving mints one single-use token per action, bound to a SHA-256 hash of its exact arguments. Each tool checks its token before it writes anything. The email is only drafted; nothing is ever sent.${ST ? " Here the tools run on the Python MCP server (<code>mcp_server.py</code>, over stdio)." : ""}</p>
         <div class="grid2">${acts.map(card).join("")}</div>
         <div class="btns">
           <button class="b primary" id="approve">Approve and run both actions</button>
@@ -651,11 +666,11 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
 
       <div class="grid2">
         <div class="block">
-          <header><h2>Product Pulse Notes</h2><span class="muted" style="font-size:13px">Shared log · one entry per week</span></header>
+          <header><h2>Product Pulse Notes</h2><span class="muted" style="font-size:13px">${ST ? "out/Product_Pulse_Notes.md" : "Shared log"} · one entry per week</span></header>
           <div id="notes"><div class="empty">Loading the shared notes log…</div></div>
         </div>
         <div class="block">
-          <header><h2>Email drafts</h2><span class="muted" style="font-size:13px">Drafts only · never sent</span></header>
+          <header><h2>Email drafts</h2><span class="muted" style="font-size:13px">${ST ? "out/email_drafts" : "Drafts only"} · never sent</span></header>
           <div id="drafts"><div class="empty">Loading drafts…</div></div>
         </div>
       </div>
@@ -674,6 +689,7 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
   // live shared store (notes + drafts)
   let notes = null, drafts = null, subscribed = false;
   async function subscribeStore() {
+    if (ST) return; // notes and drafts arrive with each Streamlit render
     await capsReady;
     if (!caps.db) { notes = drafts = "off"; renderStore(); return; }
     if (subscribed) return; subscribed = true;
@@ -689,7 +705,7 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
     const off = '<div class="empty">The shared log needs a signed-in claude.ai view. You can still read the proposed actions above.</div>';
     nEl.innerHTML = notes === "off" ? off : notes === null ? '<div class="empty">Loading the shared notes log…</div>'
       : !notes.length ? '<div class="empty">No entries yet. Approve the actions above to append this week’s entry.</div>'
-      : notes.map((n, i) => `<details class="entry" ${i === 0 ? "open" : ""}><summary><strong>Entry: ${esc(n.date)}</strong><span class="muted" style="font-size:13px">logged ${n.logged_at ? new Date(n.logged_at).toLocaleString("en-GB") : ""}</span></summary>
+      : notes.map((n, i) => `<details class="entry" ${i === 0 ? "open" : ""}><summary><strong>Entry: ${esc(n.date)}</strong><span class="muted" style="font-size:13px">${n.logged_at ? "logged " + new Date(n.logged_at).toLocaleString("en-GB") : ""}</span></summary>
           <div><p style="font-size:14px"><strong>Top themes:</strong> ${esc(n.top_themes.join(" · "))}</p><p style="font-size:14px"><strong>Fee issue:</strong> ${esc(n.identified_fee_issue)}</p>
           <pre class="args">${esc(JSON.stringify(n, null, 2))}</pre>
           <div class="btns"><button class="b small" data-note="${i}">Download entry .md</button></div></div></details>`).join("");
@@ -719,7 +735,10 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
     panels[name][1]();
     if (push) { try { history.replaceState(null, "", "#" + name); } catch {} }
   }
-  document.querySelectorAll("nav.steps button").forEach(b => b.addEventListener("click", () => { show(b.dataset.tab); window.scrollTo({ top: 0 }); }));
+  document.querySelectorAll("nav.steps button").forEach(b => b.addEventListener("click", () => {
+    show(b.dataset.tab); window.scrollTo({ top: 0 });
+    if (ST) { try { window.frameElement?.scrollIntoView({ block: "start" }); } catch {} }
+  }));
 
   // ---------- light / dark toggle ----------
   function syncMode() {
@@ -735,6 +754,31 @@ details.entry > div { padding: 0 14px 14px; display: grid; gap: 10px; }
     syncMode();
   });
   syncMode();
+
+  // In Streamlit, paint the app around this frame to match, and report the page height.
+  if (ST) {
+    const paintHost = () => {
+      try {
+        const bg = getComputedStyle(document.body).backgroundColor;
+        window.parent.document.querySelectorAll('body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"]').forEach(el => { el.style.background = bg; });
+      } catch {}
+    };
+    new MutationObserver(paintHost).observe(document.documentElement, { attributes: true, attributeFilter: ["data-mode"] });
+    paintHost();
+    const wrap = $(".wrap");
+    new ResizeObserver(() => stPost({ type: "streamlit:setFrameHeight", height: Math.ceil(wrap.getBoundingClientRect().height) + 2 })).observe(wrap);
+    window.addEventListener("message", e => {
+      const m = e.data;
+      if (!m || m.type !== "streamlit:render" || !m.args?.state) return;
+      const s = m.args.state;
+      runLog.splice(0, runLog.length, ...(s.log || []));
+      notes = s.notes || []; drafts = s.drafts || [];
+      setGate(s.gate || "pending");
+      const el = $("#runlog"); if (el) el.innerHTML = renderLog();
+      renderStore();
+    });
+    stPost({ type: "streamlit:componentReady" });
+  }
 
   // ---------- boot ----------
   fetch("data.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {

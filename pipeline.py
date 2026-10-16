@@ -13,13 +13,13 @@ number in the output traces to a source line or to the review CSV.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import re
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -28,6 +28,7 @@ CSV = ROOT / "data" / "groww_reviews_12w.csv"
 FACTS = ROOT / "data" / "sources" / "official_facts.md"
 OUT = ROOT / "out"
 MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMB_CACHE = ROOT / "data" / "embeddings.npz"   # saved vectors, so the hosted app needs no torch/model
 K = 5
 MIN_CHARS = 100          # short reviews ("good app") carry no topic; cluster substantive ones
 SOURCES = {
@@ -68,13 +69,37 @@ CONFUSION = re.compile(
     r"deduct|cutting|looting|cheat|scam|surprise|not transparent|confus|never (?:told|inform)|clarity|penalt", re.I)
 
 _model = None
+_cache: dict[str, np.ndarray] | None = None
 
 
-def embedder() -> SentenceTransformer:
+def embedder():
+    """The sentence-transformers model, loaded only when a text is missing from the embedding cache."""
     global _model
     if _model is None:
+        from sentence_transformers import SentenceTransformer  # heavy (torch); optional when the cache is complete
         _model = SentenceTransformer(MODEL)
     return _model
+
+
+def _key(text: str) -> str:
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()
+
+
+def embed(texts: list[str], batch_size: int = 32) -> np.ndarray:
+    """Normalised embeddings for `texts`, served from data/embeddings.npz; encodes and saves any that are missing."""
+    global _cache
+    if _cache is None:
+        _cache = {}
+        if EMB_CACHE.exists():
+            z = np.load(EMB_CACHE)
+            _cache = dict(zip(z["keys"].tolist(), z["vecs"]))
+    keys = [_key(t) for t in texts]
+    missing = sorted({(k, t) for k, t in zip(keys, texts) if k not in _cache})
+    if missing:
+        vecs = embedder().encode([t for _, t in missing], batch_size=batch_size, normalize_embeddings=True, show_progress_bar=False)
+        _cache.update(zip([k for k, _ in missing], vecs))
+        np.savez_compressed(EMB_CACHE, keys=np.array(list(_cache)), vecs=np.stack(list(_cache.values())).astype(np.float32))
+    return np.stack([_cache[k] for k in keys])
 
 
 # ---------------------------------------------------------------- Step 1
@@ -148,7 +173,7 @@ def review_intelligence(asof: dt.date | None = None) -> dict:
     df = load_reviews()
     asof = asof or df["date"].max().date()
     d = english_substantive(df)
-    emb = embedder().encode(d["text"].tolist(), batch_size=128, normalize_embeddings=True, show_progress_bar=False)
+    emb = embed(d["text"].tolist(), batch_size=128)
     km = KMeans(K, n_init=20, random_state=42).fit(emb)
     d["cluster"] = km.labels_
     labels = label_clusters(d)
@@ -226,9 +251,8 @@ def load_facts() -> tuple[list[dict], str]:
 
 
 def retrieve(query: str, facts: list[dict], k: int = 8) -> list[dict]:
-    m = embedder()
-    F = m.encode([f["text"] for f in facts], normalize_embeddings=True, show_progress_bar=False)
-    q = m.encode([query], normalize_embeddings=True, show_progress_bar=False)[0]
+    F = embed([f["text"] for f in facts])
+    q = embed([query])[0]
     sims = F @ q
     return [dict(facts[i], score=round(float(sims[i]), 3)) for i in np.argsort(-sims)[:k]]
 

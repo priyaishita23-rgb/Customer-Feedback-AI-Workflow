@@ -1,193 +1,102 @@
-"""Streamlit demo: streamlit run app.py
-Groww Review Intelligence -> Weekly Product Pulse -> Standardized Fee Explainer -> Approval-Gated MCP
-"""
-from pathlib import Path
-import pandas as pd
-import streamlit as st
+"""Streamlit host for the Groww Review Pulse prototype: streamlit run app.py
 
-from mcp_client import execute_approved, proposed_actions, try_without_approval
-from pipeline import run, words
+Serves the same page as the claude.ai prototype (prototype/index.html, white + sage with a dark-mode
+toggle). The data is produced live by pipeline.py when the app starts, and the Step 4 buttons
+(Approve / Reject / try without approval) run here, against the real stdio MCP server
+(mcp_server.py) through the approval gate (approval.py).
+"""
+import datetime as dt
+import json
+import re
+import sys
+from pathlib import Path
+
+import streamlit as st
+import streamlit.components.v1 as components
 
 ROOT = Path(__file__).parent
+sys.path.insert(0, str(ROOT / "prototype"))
+
+from export_data import build_data  # noqa: E402
+from mcp_client import execute_approved, proposed_actions, try_without_approval  # noqa: E402
+
 OUT = ROOT / "out"
+BUILD = ROOT / "build" / "pulse_component"
+SKELETON = ('<!doctype html><html><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            "<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>"
+            '<script>window.PULSE_HOST = "streamlit";</script></head><body>')
 
-st.set_page_config(
-    page_title="Groww Review Pulse & Fee Explainer (Milestone 5)",
-    page_icon="📈",
-    layout="wide",
-)
-
-st.title("📈 Groww: Review Intelligence & Support Workflow")
-st.caption(
-    "Milestone 5: Transforms 12 weeks of public Play Store reviews into an internal Product Pulse "
-    "and a standardized Customer Support Fee Explainer, executed via Approval-Gated MCP."
-)
-
-
-@st.cache_data(show_spinner="Embedding, clustering, and retrieving official facts…")
-def generate():
-    return run()
+st.set_page_config(page_title="Groww Review Pulse", page_icon="📈", layout="wide")
+# Let the page fill the window: hide Streamlit's header/toolbar and padding.
+st.markdown("""<style>
+header[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], footer { display: none !important; }
+.block-container, [data-testid="stMainBlockContainer"] { padding: 0 !important; max-width: 100% !important; }
+[data-testid="stVerticalBlock"] { gap: 0 !important; }
+iframe { display: block; }
+</style>""", unsafe_allow_html=True)
 
 
-r = generate()
-ins, payload = r["insights"], r["payload"]
+@st.cache_resource(show_spinner="Running the review pipeline on 13,100 reviews…")
+def build_page() -> dict:
+    """Run the pipeline once per server start and write the page + its data for the component."""
+    data = build_data()
+    BUILD.mkdir(parents=True, exist_ok=True)
+    (BUILD / "data.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    page = (ROOT / "prototype" / "index.html").read_text(encoding="utf-8")
+    (BUILD / "index.html").write_text(SKELETON + page + "</body></html>", encoding="utf-8")
+    return data["payload"]
 
-# Top Metrics Row
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Total Reviews Analyzed", f"{ins['total_reviews']:,}")
-c2.metric("Substantive Reviews Clustered", f"{ins['clustered_reviews']:,}")
-c3.metric("Review Window", f"{ins['window'][0]} to {ins['window'][1]}")
-c4.metric("Identified Fee Issue", ins["fee_issue"]["fee"])
 
-st.markdown("---")
+def read_notes() -> list[dict]:
+    """Entries appended by the MCP tool; each carries its raw JSON block."""
+    path = OUT / "Product_Pulse_Notes.md"
+    if not path.exists():
+        return []
+    blocks = re.findall(r"```json\n(.*?)\n```", path.read_text(encoding="utf-8"), re.S)
+    return sorted((json.loads(b) for b in blocks), key=lambda e: e["date"], reverse=True)
 
-tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 Step 1: Review Intelligence & Themes",
-    "📝 Step 2: Weekly Product Pulse (Internal)",
-    "💡 Step 3: Fee Explainer (Support Snippet)",
-    "🛡️ Step 4: Approval-Gated MCP Orchestration",
-])
 
-with tab1:
-    st.header("Step 1 — Review Intelligence & Cluster Analysis")
-    st.markdown(
-        """
-        **Pipeline Overview:**
-        - Filtered substantive English reviews (≥100 chars, PII scrubbed, Hinglish noise excluded).
-        - Embedded using `sentence-transformers/all-MiniLM-L6-v2`.
-        - Clustered via **K-Means ($k=5$)**; ranked by negative review volume (≤3★) to prioritize user friction.
-        """
-    )
+def read_drafts() -> list[dict]:
+    drafts = []
+    for path in sorted((OUT / "email_drafts").glob("*.txt"), reverse=True):
+        head, _, body = path.read_text(encoding="utf-8").partition("\n\n")
+        drafts.append(dict(subject=head.removeprefix("Subject: ").strip(), body=body.rstrip("\n"), to=""))
+    return drafts
 
-    st.subheader("Clustered Review Themes (Top 3 Highlighted)")
-    themes_df = pd.DataFrame(ins["themes"]).drop(columns=["cluster"])
-    st.dataframe(themes_df, use_container_width=True)
 
-    st.subheader("3 Verbatim User Quotes (Representing Top Themes)")
-    cols = st.columns(3)
-    for i, q in enumerate(ins["quotes"][:3]):
-        with cols[i]:
-            st.info(
-                f"**Theme:** {q['theme']}\n\n"
-                f"“{q['text']}”\n\n"
-                f"⭐ **Rating:** {q['rating']}★ | 📅 **Date:** {q.get('date', 'N/A')}"
-            )
+def log(kind: str, msg: str) -> None:
+    st.session_state.log.append(dict(kind=kind, msg=msg, at=dt.datetime.now().strftime("%H:%M:%S")))
 
-    st.subheader("Detected Fee / Charge Confusion Point")
-    st.markdown(
-        f"**Selected Fee Issue:** `{ins['fee_issue']['fee']}`  \n"
-        f"**Why this was flagged:** Users frequently combine sell-order charge terms with confusion vocabulary "
-        f"(*'hidden'*, *'unexpected'*, *'deducted without clarity'*). It recorded **{ins['fee_issue']['confusion_mentions']} confusion mentions**, "
-        f"the highest across all scanned fee categories."
-    )
-    st.dataframe(pd.DataFrame(ins["fee_issue"]["all_buckets"]), use_container_width=True)
 
-with tab2:
-    st.header("Step 2 — Weekly Product Pulse (Internal Output)")
-    pulse_text = r["pulse"]
-    pulse_words = words(pulse_text)
-
-    col_meta1, col_meta2 = st.columns([1, 4])
-    with col_meta1:
-        st.metric("Word Count", f"{pulse_words} words", delta="≤ 250 Target Met", delta_color="normal")
-    with col_meta2:
-        st.success("Structured format: Top Themes Summary + User Voices + Key Observation + 3 Action Ideas")
-
-    st.markdown(pulse_text)
-
-    st.download_button(
-        label="📥 Download Weekly Product Pulse (Markdown)",
-        data=pulse_text,
-        file_name="weekly_pulse.md",
-        mime="text/markdown",
-    )
-
-with tab3:
-    st.header("Step 3 — Standardized Fee Explainer (Support Snippet)")
-    st.markdown(
-        """
-        **Context:** Directly addresses the sell-order charge confusion detected in Step 1.
-        Written in a neutral, facts-only tone based strictly on official facts retrieved from Groww pricing & CDSL depository schedules.
-        """
-    )
-
-    explainer = r["explainer"]
-    col_e1, col_e2 = st.columns([1, 4])
-    with col_e1:
-        st.metric("Bullet Points", f"{len(explainer['bullets'])} / 6 max", delta="≤ 6 Target Met")
-    with col_e2:
-        st.info(f"Verified against official sources. **Last checked:** {explainer['last_checked']}")
-
-    st.markdown(explainer["markdown"])
-
-    with st.expander("🔍 View Retrieved Official Facts & Cosine Similarity (RAG Evidence)"):
-        st.dataframe(pd.DataFrame(explainer["retrieved"]), use_container_width=True)
-
-    st.download_button(
-        label="📥 Download Fee Explainer (Markdown)",
-        data=explainer["markdown"],
-        file_name="fee_explainer.md",
-        mime="text/markdown",
-    )
-
-with tab4:
-    st.header("Step 4 — Required MCP Actions (Approval-Gated)")
-    st.markdown(
-        """
-        **Security & Governance Architecture:**
-        - **MCP Server:** FastMCP stdio server running two distinct tools: `append_to_notes` and `create_email_draft`.
-        - **Cryptographic Gate:** Before executing any tool, an explicit human approval decision is required.
-        - **Single-Use Approval Tokens:** `approval.py` mints a random single-use token bound to the SHA-256 hash of the exact tool arguments.
-          Calls without a valid token are rejected with `Human approval required`.
-        """
-    )
-
+def handle(action: str, payload: dict) -> None:
     actions = proposed_actions(payload)
+    if action == "approve":
+        log("info", "Approved by you. Minting one single-use token per action and calling the MCP server.")
+        results = execute_approved(actions)
+        for r in results:
+            log("bad" if r.startswith("ERROR") else "ok", r.replace(str(ROOT) + "\\", "").replace(str(ROOT) + "/", ""))
+        st.session_state.gate = "failed" if any(r.startswith("ERROR") for r in results) else "approved"
+    elif action == "reject":
+        log("bad", "Rejected. No tool was called and nothing was written.")
+        st.session_state.gate = "rejected"
+    elif action == "bypass":
+        log("warn", "Calling both MCP tools directly with a forged token…")
+        for r in try_without_approval(actions):
+            log("warn" if r.startswith("ERROR") else "bad", ("Blocked: " if r.startswith("ERROR") else "Unexpected: ") + r.removeprefix("ERROR: "))
 
-    st.warning("⚠️ **Approval Gate Active:** No notes are appended and no email drafts are created until you approve below.")
 
-    st.subheader("1. Proposed Action: Append to Notes / Doc")
-    st.caption("Schema: { date, top_themes, weekly_pulse, identified_fee_issue, explanation_bullets, source_links }")
-    st.json(actions[0]["args"]["entry"], expanded=False)
+payload = build_page()
+st.session_state.setdefault("log", [])
+st.session_state.setdefault("gate", "pending")
+st.session_state.setdefault("handled", None)
 
-    st.subheader("2. Proposed Action: Create Email Draft (No Auto-Send)")
-    st.caption("Subject & Body preview:")
-    st.text(f"Subject: {actions[1]["args"]["subject"]}")
-    st.text_area("Email Draft Body Preview", actions[1]["args"]["body"], height=220, disabled=True)
+pulse_page = components.declare_component("groww_review_pulse", path=str(BUILD))
+event = pulse_page(state=dict(gate=st.session_state.gate, log=st.session_state.log,
+                              notes=read_notes(), drafts=read_drafts()),
+                   key="pulse", default=None)
 
-    col_btn1, col_btn2, col_btn3 = st.columns([2, 1, 2])
-    with col_btn1:
-        if st.button("✅ Approve & Execute Both MCP Actions", type="primary", use_container_width=True):
-            with st.spinner("Minting single-use approval tokens and calling MCP server..."):
-                results = execute_approved(actions)
-                for res in results:
-                    st.success(res)
-    with col_btn2:
-        if st.button("❌ Reject", use_container_width=True):
-            st.error("Action rejected by user. No tools were executed.")
-
-    with col_btn3:
-        if st.button("🔒 Test Security Gate (Attempt Without Approval)", use_container_width=True):
-            with st.spinner("Testing MCP server refusal without token..."):
-                test_results = try_without_approval(actions)
-                for tr in test_results:
-                    st.warning(f"MCP Gate Blocked Unauthorized Call:\n{tr}")
-
-    st.markdown("---")
-    st.subheader("📁 Live Inspection of MCP Output Files")
-    c_out1, c_out2 = st.columns(2)
-    with c_out1:
-        st.markdown("**Appended Notes File (`out/Product_Pulse_Notes.md`):**")
-        notes_path = OUT / "Product_Pulse_Notes.md"
-        if notes_path.exists():
-            st.text_area("Product_Pulse_Notes.md", notes_path.read_text(encoding="utf-8")[-1200:], height=250, disabled=True)
-        else:
-            st.write("File not created yet.")
-
-    with c_out2:
-        draft_path = OUT / "email_drafts" / f"{payload['date']}.txt"
-        st.markdown(f"**Email Draft File (`out/email_drafts/{draft_path.name}`):**")
-        if draft_path.exists():
-            st.text_area(draft_path.name,draft_path.read_text(encoding="utf-8"), height=250, disabled=True)
-        else:
-            st.write("Draft not created yet.")
+if event and event.get("nonce") != st.session_state.handled:
+    st.session_state.handled = event["nonce"]
+    handle(event["action"], payload)
+    st.rerun()

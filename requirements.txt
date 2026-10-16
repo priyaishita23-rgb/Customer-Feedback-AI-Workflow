@@ -1,6 +1,6 @@
+# Runs app.py / run.py from the saved embeddings in data/embeddings.npz (no torch needed).
 pandas
+numpy
 scikit-learn
-sentence-transformers
 streamlit
 mcp<2
-google-play-scraper
