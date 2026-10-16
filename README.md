@@ -19,7 +19,8 @@ without approval" shows the tools refusing a forged token. Rebuild the data with
    branch `main` (or `development` to try changes first), main file `app.py`.
 3. **Advanced settings** -> Python **3.12**. No secrets are needed. Deploy.
 
-The hosted app runs the full pipeline and the real stdio MCP server. It reads saved embeddings from
+The hosted app shows the same page as the claude.ai prototype (white + sage, dark-mode toggle, review
+explorer). It runs the full pipeline when it starts, and Step 4 calls the real stdio MCP server. It reads saved embeddings from
 `data/embeddings.npz`, so it does not install PyTorch. The cloud disk is temporary: notes and drafts
 written there reset when the app restarts. This week's entry is already in `out/Product_Pulse_Notes.md`, so
 approving there reports "already in … not appended again" and re-saves the draft.
@@ -29,7 +30,7 @@ approving there reports "already in … not appended again" and re-saves the dra
 pip install -r requirements.txt              # runs the app/pipeline from saved embeddings
 pip install -r requirements-full.txt         # only to re-scrape or embed new reviews/facts
 python fetch_reviews.py --asof 2026-10-05   # optional: re-scrape (CSV is already in data/)
-streamlit run app.py                         # UI demo, approval buttons in last tab
+streamlit run app.py                         # the prototype page, Step 4 runs the real MCP server
 # or
 python run.py                                # CLI, y/N approval prompt
 python run.py --dry-run                      # generate only, no actions

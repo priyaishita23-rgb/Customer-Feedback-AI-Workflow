@@ -1,15 +1,11 @@
-# Sage green on white (light) and on green-black (dark). The app follows the viewer's
-# system setting; the menu (top right) has a System / Light / Dark switch.
-[theme.light]
+# The page (prototype/index.html) has its own white + sage theme and dark-mode toggle, and repaints
+# the app around it to match. This keeps Streamlit's own frame white while the page loads.
+[theme]
+base = "light"
 primaryColor = "#4E6E50"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F3F6F1"
 textColor = "#1E2A21"
-linkColor = "#4E6E50"
 
-[theme.dark]
-primaryColor = "#A9C4A4"
-backgroundColor = "#121814"
-secondaryBackgroundColor = "#19211B"
-textColor = "#E5ECE4"
-linkColor = "#A9C4A4"
+[client]
+toolbarMode = "minimal"
