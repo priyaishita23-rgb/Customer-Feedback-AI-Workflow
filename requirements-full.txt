@@ -1,0 +1,4 @@
+# Adds the embedding model (for new reviews or facts) and the Play Store scraper.
+-r requirements.txt
+sentence-transformers
+google-play-scraper

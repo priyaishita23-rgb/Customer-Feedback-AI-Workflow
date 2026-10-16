@@ -24,7 +24,7 @@ def main():
 
     df = p.load_reviews()
     d = p.english_substantive(df)
-    emb = p.embedder().encode(d["text"].tolist(), batch_size=128, normalize_embeddings=True, show_progress_bar=False)
+    emb = p.embed(d["text"].tolist(), batch_size=128)
     d["cluster"] = KMeans(p.K, n_init=20, random_state=42).fit(emb).labels_
     labels = p.label_clusters(d)
     assert sorted(labels.values()) == sorted(t["label"] for t in ins["themes"]), "cluster labels drifted from insights"

@@ -13,9 +13,21 @@ weekly pulse, fee explainer with the retrieved official facts, and the approval 
 shared "Product Pulse Notes" log and saves the email draft (never sent) in the page's own store; "Try calling the tools
 without approval" shows the tools refusing a forged token. Rebuild the data with `python prototype/export_data.py`.
 
+## Host on Streamlit Community Cloud
+1. Sign in at https://share.streamlit.io with the GitHub account that owns this repo.
+2. **Create app** -> deploy from GitHub: repository `priyaishita23-rgb/Customer-Feedback-AI-Workflow`,
+   branch `main` (or `development` to try changes first), main file `app.py`.
+3. **Advanced settings** -> Python **3.12**. No secrets are needed. Deploy.
+
+The hosted app runs the full pipeline and the real stdio MCP server. It reads saved embeddings from
+`data/embeddings.npz`, so it does not install PyTorch. The cloud disk is temporary: notes and drafts
+written there reset when the app restarts. This week's entry is already in `out/Product_Pulse_Notes.md`, so
+approving there reports "already in … not appended again" and re-saves the draft.
+
 ## How to run
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt              # runs the app/pipeline from saved embeddings
+pip install -r requirements-full.txt         # only to re-scrape or embed new reviews/facts
 python fetch_reviews.py --asof 2026-10-05   # optional: re-scrape (CSV is already in data/)
 streamlit run app.py                         # UI demo, approval buttons in last tab
 # or
@@ -63,6 +75,8 @@ Per-bucket counts: `out/insights.json` -> `fee_issue.all_buckets`.
 - DP fee example (Rs 23.60) is calculated from listed rates, labelled as such.
 - The `.env` LLM keys in the parent folder returned 401, so no LLM was used.
 - Reviewer names are dropped from the CSV; emails/phones are masked.
+- Embeddings are cached in `data/embeddings.npz` (keyed by a hash of each text). The model only loads for
+  texts not in the cache, e.g. after re-scraping or editing `official_facts.md`.
 
 ## Deliverables map
 | Deliverable | File |
