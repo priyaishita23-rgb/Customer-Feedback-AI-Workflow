@@ -7,11 +7,17 @@ Product from Milestone 1: **Groww** (stocks / mutual funds app).
 Reviews: 13,100 public Google Play reviews, 13 Jul – 4 Oct 2026 (12 weeks).
 
 ## Live prototype
-**https://claude.ai/artifact/JyLrFYpKxot7DJoBGzwMeW** (`prototype/index.html`, data in `prototype/data.json`).
+**https://groww-review-pulse-customer-ai-workflow.streamlit.app/** (Streamlit Community Cloud, deployed from `main`)
+
+The app shows `prototype/index.html` and runs the pipeline when it starts; Step 4 calls the real stdio MCP server
+(`mcp_server.py`) through the approval gate. The same page is also published at
+https://claude.ai/artifact/JyLrFYpKxot7DJoBGzwMeW (private unless shared), where Step 4 logs to the page's own store.
+
 Four steps: review intelligence (themes, trends, quotes, fee-confusion scan recomputed in the browser, review explorer),
-weekly pulse, fee explainer with the retrieved official facts, and the approval gate. Approving appends the entry to a
-shared "Product Pulse Notes" log and saves the email draft (never sent) in the page's own store; "Try calling the tools
-without approval" shows the tools refusing a forged token. Rebuild the data with `python prototype/export_data.py`.
+weekly pulse, fee explainer with the retrieved official facts, and the approval gate. Approving appends the entry to the
+"Product Pulse Notes" log and saves the email draft (never sent); "Try calling the tools without approval" shows the
+tools refusing a forged token. A Dark mode / Light mode button sits at the top right. Rebuild the page data for the
+claude.ai copy with `python prototype/export_data.py`.
 
 ## Host on Streamlit Community Cloud
 1. Sign in at https://share.streamlit.io with the GitHub account that owns this repo.
@@ -87,4 +93,4 @@ Per-bucket counts: `out/insights.json` -> `fee_issue.all_buckets`.
 | Email draft | `out/email_drafts/2026-10-04.txt` (+ `.eml`) |
 | Reviews CSV sample | `data/reviews_sample.csv` (full: `data/groww_reviews_12w.csv`) |
 | Source list | `sources.md` |
-| Working prototype | https://claude.ai/artifact/JyLrFYpKxot7DJoBGzwMeW (or run `streamlit run app.py` locally) |
+| Working prototype | https://groww-review-pulse-customer-ai-workflow.streamlit.app/ (or run `streamlit run app.py` locally) |
